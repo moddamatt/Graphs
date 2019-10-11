@@ -1,6 +1,7 @@
 from room import Room
 from player import Player
 from world import World
+from util import Queue
 
 import random
 
@@ -23,10 +24,34 @@ player = Player("Name", world.startingRoom)
 
 # Fill this out
 traversalPath = []
+visited = {}
+path = []
+
+# add starting room to visited
+visited[player.currentRoom.id] = player.currentRoom.getExits()
+
+# First we must populate the traversal path with the directions needed to visit each
+# room once
+while len(visited) < len(roomGraph) - 1:
+    if player.currentRoom.id not in visited:
+        visited[player.currentRoom.id] = player.currentRoom.getExits()
+        previous_direction = path[-1]
+        visited[player.currentRoom.id].remove(previous_direction)
+
+    # If no new paths are availibale, go back to a room with an open path
+    while len(visited[player.currentRoom.id]) < 1:  
+        previous_direction = path.pop()
+        traversalPath.append(previous_direction)
+        player.travel(previous_direction)
+
+    direction_inverse = {'s': 'n', 'n': 's', 'w': 'e', 'e': 'w'}
+    move = visited[player.currentRoom.id].pop(0)
+    traversalPath.append(move)
+    path.append(direction_inverse[move])
+    player.travel(move)
 
 
-
-# TRAVERSAL TEST
+# Based upon the populated traversal path, visit each room
 visited_rooms = set()
 player.currentRoom = world.startingRoom
 visited_rooms.add(player.currentRoom)
@@ -40,8 +65,6 @@ if len(visited_rooms) == len(roomGraph):
 else:
     print("TESTS FAILED: INCOMPLETE TRAVERSAL")
     print(f"{len(roomGraph) - len(visited_rooms)} unvisited rooms")
-
-
 
 #######
 # UNCOMMENT TO WALK AROUND
